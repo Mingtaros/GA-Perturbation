@@ -7,7 +7,8 @@ This is a small experiment on how good is Genetic Algorithm in creating a minimu
 ## How to Run?
 1. Install necessary requirements
 2. Train the model, run `python model.py` in terminal. Make sure folder `models` is created with a model.
-3. Run Genetic Algorithm, `python genetic.py <num_generations>` in terminal for the main result.
+3. Run Genetic Algorithm, `python genetic.py <num_generations> <norm>` in terminal for the main result.
     - use any number for `<num_generations>`, by default, it's 10. The more generation, the better the result would be.
+    - use either 'l1_norm', 'l2_norm', or 'linfinity_norm' for the `<norm>`.
     - note that this script uses the timestamp of the current day to both find the model and save images
 3. See result in images for the perturbation image.

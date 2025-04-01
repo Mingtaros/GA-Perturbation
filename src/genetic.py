@@ -15,7 +15,6 @@ from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.decomposition.asf import ASF
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
-from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
 from perturbation import perturb
@@ -67,13 +66,13 @@ class MinimumPerturbationProblem(ElementwiseProblem):
         out["F"].append(test_accuracy)
 
 
-def main(num_generations=10, priority_weights=[0.5, 0.5]):
+def main(num_generations=10, norm="l2_norm", priority_weights=[0.5, 0.5]):
     torch.manual_seed(42)
     timestamp = datetime.datetime.today().strftime('%Y%m%d')
     problem = MinimumPerturbationProblem(
         timestamp=timestamp,
         image_shape=(1, 28, 28),
-        norm='l2_norm'
+        norm=norm
     )
     algorithm = NSGA2(
         pop_size=100,
@@ -105,9 +104,9 @@ def main(num_generations=10, priority_weights=[0.5, 0.5]):
     # best result according to weights
     i = decomp.do(nF, 1/weights).argmin()
 
-    print("Best solution found: \nX = %s\nF = %s" % (res.X[i], res.F[i]))
+    print("Best solution found according to weights: \nX = %s\nF = %s" % (res.X[i], res.F[i]))
 
-    # save res.X
+    # save the best res.X
     reshaped_image = res.X[i].reshape(problem.x_shape)
     if not os.path.exists('images'):
         os.makedirs('images')
@@ -116,10 +115,7 @@ def main(num_generations=10, priority_weights=[0.5, 0.5]):
     _, test_dataset = load_mnist_dataset()
     # get random image
     original_image, _ = test_dataset[np.random.randint(0, len(test_dataset))]
-    
-    # reshape the perturbed image to the original image shape
     perturbed_image = reshaped_image.reshape(28, 28)
-    
     # plot the original and perturbed images side by side
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     
@@ -128,7 +124,7 @@ def main(num_generations=10, priority_weights=[0.5, 0.5]):
     axes[0].axis('off')
     
     axes[1].imshow(perturbed_image, cmap='gray')
-    axes[1].set_title(f'Perturbed Image, Norm={res.F[i, 0]}, Accuracy={res.F[i, 1]}')
+    axes[1].set_title(f'Perturbed Image, Norm={res.F[i, 0]:.2f}, Accuracy={res.F[i, 1]:.2f}%')
     axes[1].axis('off')
     
     fig.savefig(f'images/original_vs_perturbed_image_{timestamp}.png')
@@ -138,8 +134,9 @@ def main(num_generations=10, priority_weights=[0.5, 0.5]):
 if __name__ == "__main__":
     try:
         num_generations = int(sys.argv[1])
+        norm = sys.argv[2]
     except (IndexError, ValueError):
-        print("Usage: python genetic.py <num_generations>")
+        print("Usage: python genetic.py <num_generations> <norm>")
         sys.exit(1)
     priority_weights = [0.5, 0.5]
-    main(num_generations, priority_weights)
+    main(num_generations, norm, priority_weights)
